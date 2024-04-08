@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>BASE64编码解析</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #fff;
+    }
+    h1 {
+      margin-top: 0;
+      text-align: center;
+    }
+    .form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 400px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      margin-bottom: 10px;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      resize: vertical;
+    }
+    .radio-group {
+      display: flex;
+      margin-bottom: 10px;
+    }
+    .radio-group label {
+      margin-right: 10px;
+    }
+    .button {
+      padding: 10px 20px;
+      background-color: #4caf50;
+      color: #fff;
+      font-size: 14px;
+      font-weight: bold;
+      text-decoration: none;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .button:hover {
+      background-color: #45a049;
+    }
+    .output {
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+    }
+    .output img,
+    .output embed {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>BASE64编码解析</h1>
+    <div class="form">
+      <textarea id="base64Input" placeholder="输入BASE64编码"></textarea>
+      <div class="radio-group">
+        <label><input type="radio" name="format" value="pdf" checked> PDF</label>
+        <label><input type="radio" name="format" value="jpg"> JPG</label>
+        <label><input type="radio" name="format" value="png"> PNG</label>
+      </div>
+      <button class="button" onclick="decodeBase64()">提交</button>
+    </div>
+    <div class="output" id="output"></div>
+  </div>
+
+  <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="encodeImageToBase64()">
+  <button class="button" onclick="document.getElementById('imageInput').click()">上传图片并转换为Base64</button>
+
+  <script>
+    function decodeBase64() {
+      var base64Input = document.getElementById("base64Input").value;
+      var format = document.querySelector('input[name="format"]:checked').value;
+      var outputDiv = document.getElementById("output");
+
+      if (format === "pdf") {
+        var pdf = atob(base64Input);
+        // 使用PDF展示器显示PDF内容
+        outputDiv.innerHTML = "<embed src='data:application/pdf;base64," + base64Input + "' type='application/pdf'>";
+      } else if (format === "jpg" || format === "png") {
+        var img = new Image();
+        img.src = "data:image/" + format + ";base64," + base64Input;
+        img.onload = function() {
+          outputDiv.innerHTML = "";
+          outputDiv.appendChild(img);
+        };
+      }
+    }
+
+    function encodeImageToBase64() {
+      var fileInput = document.getElementById("imageInput");
+      var file = fileInput.files[0];
+      var reader = new FileReader();
+
+      reader.onload = function(e) {
+        var base64Image = e.target.result.split(",")[1];
+        var outputDiv = document.getElementById("output");
+
+        var img = new Image();
+        img.src = e.target.result;
+        img.onload = function() {
+          outputDiv.innerHTML = "";
+          outputDiv.appendChild(img);
+        };
+
+        var base64Input = document.getElementById("base64Input");
+        base64Input.value = base64Image;
+      };
+
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>

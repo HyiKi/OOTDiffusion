@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 .uuid
 venv
+.DS_Store

@@ -2,6 +2,9 @@ from pathlib import Path
 import sys
 from PIL import Image
 from utils_ootd import get_mask_location
+import os
+# fix torch.cuda.OutOfMemoryError
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:1024"
 
 PROJECT_ROOT = Path(__file__).absolute().parents[1].absolute()
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -63,10 +66,12 @@ if __name__ == '__main__':
 
     mask, mask_gray = get_mask_location(model_type, category_dict_utils[category], model_parse, keypoints)
     mask = mask.resize((768, 1024), Image.NEAREST)
+    mask.save('./images_output/mask.jpg')
     mask_gray = mask_gray.resize((768, 1024), Image.NEAREST)
+    mask_gray.save('./images_output/mask_gray.jpg')
     
     masked_vton_img = Image.composite(mask_gray, model_img, mask)
-    masked_vton_img.save('./images_output/mask.jpg')
+    masked_vton_img.save('./images_output/masked_vton_img.jpg')
 
     images = model(
         model_type=model_type,
