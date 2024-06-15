@@ -2,8 +2,7 @@ import numpy as np
 from PIL import Image
 import io
 import base64
-import os
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:1024"
+import torch
 
 def process_image(base64_image):
     # 将 base64 编码的图像字符串转换为图像
@@ -53,6 +52,7 @@ from ootd.inference_ootd_dc import OOTDiffusionDC
 from flask import Flask, request
 import sys
 import json
+import gc
 
 app = Flask(__name__)
 
@@ -63,27 +63,7 @@ def render(data) :
     result_dict['data'] = data
     return json.dumps(result_dict)
 
-@app.route("/", methods=["POST"])
-def handler():
-    for k, v in request.headers.items():
-        if k.startswith("HTTP_"):
-            # process custom request headers
-            pass
-
-    request_body = request.data
-    request_method = request.method
-    path_info = request.path
-    content_type = request.content_type
-    query_string = request.query_string.decode("utf-8")
-
-    print("request_body: {}".format(request_body))
-    print(
-        "method: {} path: {} query_string: {}".format(
-            request_method, path_info, query_string
-        )
-    )
-    body = json.loads(request_body)
-    
+def run(body):
     # args
     model_type = body.get('model_type', "hd") # "hd" or "dc"
     category = body.get('category', 0) # 0:upperbody; 1:lowerbody; 2:dress
@@ -185,8 +165,34 @@ def handler():
 
         # 将包含图像数据的字典附加到 data 列表中
         data.append(image_data)
+    return data
+
+@app.route("/", methods=["POST"])
+def handler():
+    for k, v in request.headers.items():
+        if k.startswith("HTTP_"):
+            # process custom request headers
+            pass
+
+    request_body = request.data
+    request_method = request.method
+    path_info = request.path
+    content_type = request.content_type
+    query_string = request.query_string.decode("utf-8")
+
+    print("request_body: {}".format(request_body))
+    print(
+        "method: {} path: {} query_string: {}".format(
+            request_method, path_info, query_string
+        )
+    )
+    body = json.loads(request_body)
+    
+    data = run(body)
 
     sys.stdout.flush()
+    gc.collect()
+    torch.cuda.empty_cache()
 
     return render(data), 200, {"Content-Type": "application/json"}
 
